@@ -9,20 +9,17 @@
 #import "MPNotificationView.h"
 #import "OBGradientView.h"
 
-#define kMPNotificationHeight    40.0f
+static CGFloat notificationHeight = 40.f;
 #define kMPNotificationIPadWidth 480.0f
 #define RADIANS(deg) ((deg) * M_PI / 180.0f)
 
 static NSMutableDictionary * _registeredTypes;
 
-static CGRect notificationRect()
+static CGFloat MPNotificationWidth()
 {
-    if (UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]))
-    {
-        return CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, kMPNotificationHeight);
-    }
-    
-    return CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.width, kMPNotificationHeight);
+    return  UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation])
+      ? [UIScreen mainScreen].bounds.size.height
+      : [UIScreen mainScreen].bounds.size.width;
 }
 
 NSString *kMPNotificationViewTapReceivedNotification = @"kMPNotificationViewTapReceivedNotification";
@@ -108,9 +105,11 @@ NSString *kMPNotificationViewTapReceivedNotification = @"kMPNotificationViewTapR
 
 - (void) rotateNotificationWindow
 {
-    CGRect frame = notificationRect();
-    BOOL isPortrait = (frame.size.width == [UIScreen mainScreen].bounds.size.width);
-    
+    CGRect frame = CGRectZero;
+    frame.size.height = notificationHeight;
+    frame.size.width = MPNotificationWidth();
+    BOOL isPortrait = (frame.size.width== [UIScreen mainScreen].bounds.size.width);
+
     if (isPortrait)
     {
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
@@ -120,7 +119,7 @@ NSString *kMPNotificationViewTapReceivedNotification = @"kMPNotificationViewTapR
         
         if ([[UIDevice currentDevice] orientation] == UIDeviceOrientationPortraitUpsideDown)
         {
-            frame.origin.y = [UIScreen mainScreen].bounds.size.height - kMPNotificationHeight;
+            frame.origin.y = [UIScreen mainScreen].bounds.size.height - notificationHeight;
             self.transform = CGAffineTransformMakeRotation(RADIANS(180.0f));
         }
         else
@@ -131,7 +130,7 @@ NSString *kMPNotificationViewTapReceivedNotification = @"kMPNotificationViewTapR
     else
     {
         frame.size.height = frame.size.width;
-        frame.size.width  = kMPNotificationHeight;
+        frame.size.width  = notificationHeight;
         
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
         {
@@ -174,6 +173,7 @@ static CGFloat const __imagePadding = 8.0f;
 @interface MPNotificationView ()
 
 
+@property (nonatomic, assign) CGFloat height;
 @property (nonatomic, strong) OBGradientView * contentView;
 @property (nonatomic, copy) MPNotificationSimpleAction tapBlock;
 @property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
@@ -195,7 +195,7 @@ static CGFloat const __imagePadding = 8.0f;
     self = [super initWithFrame:frame];
     if (self)
     {
-        CGFloat notificationWidth = notificationRect().size.width;
+        CGFloat notificationWidth = MPNotificationWidth();
         
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         
@@ -329,7 +329,10 @@ static CGFloat const __imagePadding = 8.0f;
 {
     if (__notificationWindow == nil)
     {
-        __notificationWindow = [[MPNotificationWindow alloc] initWithFrame:notificationRect()];
+        CGRect frame = CGRectZero;
+        frame.size.width = MPNotificationWidth();
+        frame.size.height = notificationHeight;
+        __notificationWindow = [[MPNotificationWindow alloc] initWithFrame:frame];
         __notificationWindow.hidden = NO;
     }
     
@@ -493,6 +496,11 @@ static CGFloat const __imagePadding = 8.0f;
                          
                          __notificationWindow.backgroundColor = [UIColor clearColor];
                      }];
+}
+
++ (void) setNotificationHeight:(CGFloat)height
+{
+   notificationHeight = height;
 }
 
 + (UIImage *) screenImageWithRect:(CGRect)rect

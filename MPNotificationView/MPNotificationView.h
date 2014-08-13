@@ -58,11 +58,11 @@ typedef void (^MPNotificationSimpleAction)(MPNotificationView * view);
                                    type:(NSString *)type
                           andTouchBlock:(MPNotificationSimpleAction)block;
 
-
 + (void)registerNibNameOrClass:(id)nibNameOrClass
         forNotificationsOfType:(NSString *)type;
 + (void) showNextNotification;
 
++ (void) setNotificationHeight:(CGFloat)height;
 
 @end
 
